@@ -1,29 +1,41 @@
 /*FILE: mpi_mm.c
 * By Blaise Barney 
 */
+
+/* Run with mpirun --use-hwthread-cpus -n 4 lab4 */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NRA 62        /* number of rows in matrix A */
-#define NCA 15             /* number of columns in matrix A */
-#define NCB 7             /* number of columns in matrix B */
-#define MASTER 0         /* taskid of first task */
-#define FROM_MASTER 1 /* setting a message type */
-#define FROM_WORKER 2 /* setting a message type */
+#define NRA 62          /* number of rows in matrix A */
+#define NCA 15          /* number of columns in matrix A */
+#define NCB 7           /* number of columns in matrix B */
+#define MASTER 0        /* taskid of first task */
+#define FROM_MASTER 1   /* setting a message type */
+#define FROM_WORKER 2   /* setting a message type */
 
 int main(int argc, char *argv[]) {
+    printf("Start\n");
+
     int numtasks,
             taskid,
             numworkers,
             source,
             dest,
             rows,        /* rows of matrix A sent to each worker */
-    averow, extra, offset,
-            i, j, k, rc = 0;
+    averow,
+            extra,
+            offset,
+            i,
+            j,
+            k,
+            rc = 0;
+
     double a[NRA][NCA], /* matrix A to be multiplied */
     b[NCA][NCB], /* matrix B to be multiplied */
     c[NRA][NCB]; /* result matrix C */
+
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
@@ -48,7 +60,7 @@ int main(int argc, char *argv[]) {
         offset = 0;
         for (dest = 1; dest <= numworkers; dest++) {
             rows = (dest <= extra) ? averow + 1 : averow;
-            printf("Sending %d rows to task %d offset= % d\n",rows,dest,offset);
+            printf("Sending %d rows to task %d offset= % d\n", rows, dest, offset);
             MPI_Send(&offset, 1, MPI_INT, dest, FROM_MASTER,
                      MPI_COMM_WORLD);
             MPI_Send(&rows, 1, MPI_INT, dest, FROM_MASTER,
@@ -59,7 +71,7 @@ int main(int argc, char *argv[]) {
                      MPI_COMM_WORLD);
             offset = offset + rows;
         }
-/* Receive results from worker tasks */
+        /* Receive results from worker tasks */
         for (source = 1; source <= numworkers; source++) {
             MPI_Recv(&offset, 1, MPI_INT, source, FROM_WORKER,
                      MPI_COMM_WORLD, &status);
@@ -67,7 +79,7 @@ int main(int argc, char *argv[]) {
                      MPI_COMM_WORLD, &status);
             MPI_Recv(&c[offset][0], rows * NCB, MPI_DOUBLE, source,
                      FROM_WORKER, MPI_COMM_WORLD, &status);
-            printf("Received results from task %d\n", source); // id?
+            printf("Received results from task %d\n", taskid); // id?
         }
 /* Print results */
         printf("****\n");
@@ -80,8 +92,10 @@ int main(int argc, char *argv[]) {
         printf("\n********\n");
         printf("Done.\n");
     }
-/******** worker task *****************/
+        /******** worker task *****************/
     else { /* if (taskid > MASTER) */
+        printf("mpi_mm task %d\n", taskid);
+
         MPI_Recv(&offset, 1, MPI_INT, MASTER, FROM_MASTER, MPI_COMM_WORLD,
                  &status);
         MPI_Recv(&rows, 1, MPI_INT, MASTER, FROM_MASTER, MPI_COMM_WORLD, &status);
