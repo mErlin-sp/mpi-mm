@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="mpi_mm_wsl" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="-n 4 --use-hwthread-cpus &quot;$CMakeCurrentProductFile$&quot;" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="true" PASS_PARENT_ENVS_2="true" PROJECT_NAME="mpi_mm" TARGET_NAME="mpi_mm" CONFIG_NAME="Debug-WSL" RUN_TARGET_PROJECT_NAME="mpi_mm" RUN_TARGET_NAME="mpi_mm">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
