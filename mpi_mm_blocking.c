@@ -3,35 +3,38 @@
 * modified by Oleksandr Popov
 */
 
-/* Run with mpirun --use-hwthread-cpus -n 4 lab4 */
+/* Run with mpirun --use-hwthread-cpus -n 4 mpi_mm */
 
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-#define NRA 62          /* number of rows in matrix A */
-#define NCA 15          /* number of columns in matrix A */
-#define NCB 7           /* number of columns in matrix B */
+#define NRA 10          /* number of rows in matrix A */
+#define NCA 10          /* number of columns in matrix A */
+#define NCB 5           /* number of columns in matrix B */
 #define MASTER 0        /* taskID of first task */
 #define FROM_MASTER 1   /* setting a message type */
 #define FROM_WORKER 2   /* setting a message type */
+
+void print_matrix(double *m, int nr, int nc, char *msg);
 
 int main(int argc, char *argv[]) {
     printf("Start\n");
 
     int num_tasks,
-        taskID,
-        num_workers,
-        source,
-        dest,
-        rows,        /* rows of matrix A sent to each worker */
-        ave_row,
-        extra,
-        offset,
-        i,
-        j,
-        k,
-        rc = 0;
+            taskID,
+            num_workers,
+            source,
+            dest,
+            rows,        /* rows of matrix A sent to each worker */
+    ave_row,
+            extra,
+            offset,
+            i,
+            j,
+            k,
+            rc = 0;
 
     double a[NRA][NCA], /* matrix A to be multiplied */
     b[NCA][NCB],        /* matrix B to be multiplied */
@@ -49,19 +52,23 @@ int main(int argc, char *argv[]) {
     num_workers = num_tasks - 1;
     if (taskID == MASTER) {
         printf("mpi_mm has started with %d tasks.\n", num_tasks);
+
+        srand(time(NULL));  // Set a seed for the random number generator
         for (i = 0; i < NRA; i++)
             for (j = 0; j < NCA; j++)
-                a[i][j] = 10;
+                a[i][j] = rand() % 100;
         for (i = 0; i < NCA; i++)
             for (j = 0; j < NCB; j++)
-                b[i][j] = 10;
+                b[i][j] = rand() % 100;
+        print_matrix(&a[0][0], NRA, NCA, "Matrix A");
+        print_matrix(&b[0][0], NCA, NCB, "Matrix B");
 
         ave_row = NRA / num_workers;
         extra = NRA % num_workers;
         offset = 0;
         for (dest = 1; dest <= num_workers; dest++) {
             rows = (dest <= extra) ? ave_row + 1 : ave_row;
-            printf("Sending %d rows to task %d offset= % d\n", rows, dest, offset);
+            printf("Sending %d rows to task %d offset = %d\n", rows, dest, offset);
             MPI_Send(&offset, 1, MPI_INT, dest, FROM_MASTER,
                      MPI_COMM_WORLD);
             MPI_Send(&rows, 1, MPI_INT, dest, FROM_MASTER,
@@ -80,18 +87,10 @@ int main(int argc, char *argv[]) {
                      MPI_COMM_WORLD, &status);
             MPI_Recv(&c[offset][0], rows * NCB, MPI_DOUBLE, source,
                      FROM_WORKER, MPI_COMM_WORLD, &status);
-            printf("Received results from task %d\n", taskID); // id?
+            printf("Received results from task %d\n", source); // id?
         }
 
-        /* Print results */
-        printf("****\n");
-        printf("Result Matrix:\n");
-        for (i = 0; i < NRA; i++) {
-            printf("\n");
-            for (j = 0; j < NCB; j++)
-                printf("%6.2f ", c[i][j]);
-        }
-        printf("\n********\n");
+        print_matrix(&c[0][0], NRA, NCB, "Result Matrix");
         printf("Done.\n");
     }
         /******** worker task *****************/
@@ -116,5 +115,17 @@ int main(int argc, char *argv[]) {
         MPI_Send(&c[0][0], rows * NCB, MPI_DOUBLE, MASTER, FROM_WORKER, MPI_COMM_WORLD);
     }
     MPI_Finalize();
+}
+
+void print_matrix(double *m, int nr, int nc, char *msg) {
+    /* Print results */
+    printf("****\n");
+    printf("%s", msg);
+    for (int i = 0; i < nr; i++) {
+        printf("\n");
+        for (int j = 0; j < nc; j++)
+            printf("%6.2f ", m[i * nc + j]);
+    }
+    printf("\n********\n");
 }
 
