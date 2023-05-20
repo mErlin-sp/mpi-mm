@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
-project(lab4 C)
+project(mpi_mm C)
 
 set(CMAKE_C_STANDARD 23)
 
 # Set source files
-set(SOURCES mpi_mm.c)
+set(SOURCES mpi_mm_blocking.c)
 
 # Create executable target
 add_executable(${PROJECT_NAME} ${SOURCES})
