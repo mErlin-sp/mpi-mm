@@ -12,7 +12,7 @@
 
 #define NRA 10          /* number of rows in matrix A */
 #define NCA 10          /* number of columns in matrix A */
-#define NCB 5           /* number of columns in matrix B */
+#define NCB 10          /* number of columns in matrix B */
 #define MASTER 0        /* taskID of first task */
 #define FROM_MASTER 1   /* setting a message type */
 #define FROM_WORKER 2   /* setting a message type */
@@ -53,6 +53,9 @@ int main(int argc, char *argv[]) {
     if (taskID == MASTER) {
         printf("mpi_mm has started with %d tasks.\n", num_tasks);
 
+        struct timespec start, end;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+
         srand(time(NULL));  // Set a seed for the random number generator
         for (i = 0; i < NRA; i++)
             for (j = 0; j < NCA; j++)
@@ -90,8 +93,12 @@ int main(int argc, char *argv[]) {
             printf("Received results from task %d\n", source); // id?
         }
 
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        double executionTime = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+
         print_matrix(&c[0][0], NRA, NCB, "Result Matrix");
         printf("Done.\n");
+        printf("Execution time: %f seconds\n", executionTime);
     }
         /******** worker task *****************/
     else { /* if (taskID > MASTER) */
