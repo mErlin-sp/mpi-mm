@@ -3,6 +3,9 @@ project(mpi_mm C)
 
 set(CMAKE_C_STANDARD 23)
 
+# Set the CMAKE_C_FLAGS variable
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wl,--stack,100000000")
+
 # Set source files
 set(SOURCES mpi_mm_blocking.c)
 
